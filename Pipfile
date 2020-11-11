@@ -13,6 +13,8 @@ verify_ssl = true
 "jieba" = "*"
 "pyodbc" = "*"
 "prettytable" = "*"
+"sklearn" = "*"
+"numpy" = "*"
 
 [requires]
 python_version = "3.7"
