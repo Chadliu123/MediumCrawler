@@ -1,22 +1,31 @@
-import pyodbc
+import pymysql
+import csv
+import codecs
 
 
-class OpAzureSQL:
+class OpMariaSQL:
     DataBase = None
     Link = None
 
-    def __init__(self, server: str, database: str, username: str, password: str, driver: str):
-
+    def __init__(self, hostName: str, portNum: str, username: str, password: str, DBName: str, CharSet: str):
         """
         與資料庫建立連線
-        :param server: Server名稱
-        :param database: DB名稱
+        :param hostName: hostName(IP)
+        :param portNum: portNum(3306)
         :param username: 使用者名稱
         :param password: 使用者密碼
-        :param driver: {SQL Server}
+        :param DBName: DB名稱
+        :param CharSet: "utf8"
         """
-        self.Link = pyodbc.connect(
-            'driver={%s};server=%s;database=%s;uid=%s;pwd=%s' % (driver, server, database, username, password))
+
+        self.Link = pymysql.connect(
+            host=hostName,
+            port=portNum,
+            user=username,
+            password=password,
+            db=DBName,
+            charset=CharSet
+        )
         self.DataBase = self.Link.cursor()
 
     def Insert(self, DataTableName, TitleList, ValueList):
@@ -102,7 +111,8 @@ class OpAzureSQL:
         """
         # SELECT 欄位名1,欄位名2… FROM 資料表名稱 WHERE 篩選條件
         # "SELECT * FROM `news`"
-        # SELECT `value1`, `value2`, `value3` FROM `test` WHERE `value3`>'5' SELECT * FROM `test` WHERE `value3`>'5'
+        # SELECT `value1`, `value2`, `value3` FROM `test` WHERE `value3`>'5'
+        # SELECT * FROM `test` WHERE `value3`>'5'
 
         # SELECT 欄位名1,欄位名2… FROM 資料表名稱 WHERE 篩選條件 ORDER BY 排序欄位 排序方式
 
@@ -127,11 +137,30 @@ class OpAzureSQL:
     def IntputFindCmd(self, Cmd):
         """
         輸入SQL指令，輸出符合條件的資料
+        :rtype: object
         :param Cmd: SQL指令
         :return: 資料List
         """
+        print("IntputFindCmd:\n", Cmd)
         self.DataBase.execute(Cmd)
         data = self.DataBase.fetchall()  # 取全部，或取fetchone剩下的資料
+        return data
+
+    def IntputFindCmdToCSV(self, Cmd, FilePath):
+        """
+        輸入SQL指令，輸出符合條件的資料
+        :param Cmd: SQL指令
+        :return: 資料List
+        """
+        print("IntputFindCmdToCSV:\n", Cmd)
+        self.DataBase.execute(Cmd)
+        data = self.DataBase.fetchall()  # 取全部，或取fetchone剩下的資料
+
+        with open(FilePath, "w", encoding="utf-16", newline="") as f:
+            writer = csv.writer(f)
+            for a in data:
+                writer.writerow(a)
+
         return data
 
     def TestDB(self):
@@ -145,17 +174,50 @@ class OpAzureSQL:
         while row:
             print(row[0])
             row = self.DataBase.fetchone()
-        # self.DataBase.execute('''
-        #
-        #                CREATE TABLE People
-        #                (
-        #                Name nvarchar(50),
-        #                Age int,
-        #                City nvarchar(50)
-        #                )
-        #
-        #                ''')
-        # self.Link.commit()
+
+    def CreateNewDatabale(self):
+        self.DataBase.execute('''
+
+                       CREATE TABLE People
+                       (
+                       Name nvarchar(50),
+                       Age int,
+                       City nvarchar(50)
+                       )
+
+                       ''')
+        self.Link.commit()
+        return 0
+
+    def CloseDB(self):
+        self.DataBase.close()
+        self.Link.close()
+
+    def __LoadCSV(self, CSVPath):
+        with open(CSVPath, encoding="utf-8") as csvfile:
+            # 讀取 CSV 檔案內容
+            rows = csv.reader(csvfile)
+            # 以迴圈輸出每一列
+            times = 0
+            for row in rows:
+                if row[0] == "id":
+                    Title = row
+                    continue
+                times += 1
+                print(row[10])
+                print(times)
+                cmd = f"SELECT [id],[article_type] FROM main WHERE id = '{str(row[0])}'"
+                DBdata = self.IntputFindCmd(cmd)
+                print(DBdata)
+
+                if str(DBdata[0][1]) != str(row[10]):
+                    WHERE = f"id='{row[0]}'"
+                    self.Edit("main", Title[10:11], ["-1"], WHERE)
+                    cmd = f"SELECT [id],[article_type] FROM main WHERE id = '{str(row[0])}'"
+                    DBdata = self.IntputFindCmd(cmd)
+                    print("Edit:", DBdata)
+
+        pass
 
 # server = 'blogerler-db-server.database.windows.net'
 # database = 'BloglerDB'
