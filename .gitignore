@@ -4,3 +4,5 @@ password.py
 data.csv
 test_data.csv
 content.csv
+LinkAzureDB.py
+LinkMariaDB.py
