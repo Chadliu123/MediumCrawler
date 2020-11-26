@@ -3,13 +3,6 @@ import requests
 import LinkAzureDB
 import jieba.analyse
 
-server = 'blogerler-db-server.database.windows.net'
-database = 'BloglerDB'
-username = 'blogerler'
-password = 'TibameAI04'
-driver = 'ODBC Driver 17 for SQL Server'
-DB = LinkAzureDB.OpAzureSQL(server, database, username, password, driver)
-
 
 def Crawler(keyword, resultcount, ignore=None):
     # 網址

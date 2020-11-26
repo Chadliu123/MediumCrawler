@@ -15,6 +15,9 @@ verify_ssl = true
 "prettytable" = "*"
 "sklearn" = "*"
 "numpy" = "*"
+word2vec = "*"
+gensim = "*"
+scikit-multilearn = "*"
 
 [requires]
 python_version = "3.7"
